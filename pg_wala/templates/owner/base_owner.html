@@ -9,10 +9,14 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
+
+<!-- Overlay backdrop for mobile -->
+<div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
+
 <div class="app-shell">
 
-  <!-- ── Sidebar ─────────────────────────────────── -->
-  <aside class="sidebar">
+  <!-- ── Sidebar ──────────────────────────────────── -->
+  <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo">
       <div class="sidebar-logo-text">🏠 PG-Wala</div>
       <span class="sidebar-role-badge owner">Owner Panel</span>
@@ -28,31 +32,36 @@
 
     <nav class="sidebar-nav">
       <div class="sidebar-label">Main</div>
-
       <a href="{{ url_for('owner.dashboard') }}"
-         class="sidebar-link {{ 'active' if request.endpoint == 'owner.dashboard' }}">
+         class="sidebar-link {{ 'active' if request.endpoint == 'owner.dashboard' }}"
+         onclick="closeSidebar()">
         <span class="sidebar-icon">📊</span> Dashboard
       </a>
       <a href="{{ url_for('owner.guests') }}"
-         class="sidebar-link {{ 'active' if request.endpoint in ['owner.guests','owner.edit_guest'] }}">
+         class="sidebar-link {{ 'active' if request.endpoint in ['owner.guests','owner.edit_guest'] }}"
+         onclick="closeSidebar()">
         <span class="sidebar-icon">👤</span> Guests
       </a>
       <a href="{{ url_for('owner.rooms') }}"
-         class="sidebar-link {{ 'active' if request.endpoint == 'owner.rooms' }}">
+         class="sidebar-link {{ 'active' if request.endpoint == 'owner.rooms' }}"
+         onclick="closeSidebar()">
         <span class="sidebar-icon">🛏️</span> Rooms
       </a>
       <a href="{{ url_for('owner.complaints') }}"
-         class="sidebar-link {{ 'active' if request.endpoint == 'owner.complaints' }}">
+         class="sidebar-link {{ 'active' if request.endpoint == 'owner.complaints' }}"
+         onclick="closeSidebar()">
         <span class="sidebar-icon">⚠️</span> Complaints
       </a>
       <a href="{{ url_for('owner.notices') }}"
-         class="sidebar-link {{ 'active' if request.endpoint == 'owner.notices' }}">
+         class="sidebar-link {{ 'active' if request.endpoint == 'owner.notices' }}"
+         onclick="closeSidebar()">
         <span class="sidebar-icon">📋</span> Notices
       </a>
 
       <div class="sidebar-label" style="margin-top:8px;">Account</div>
       <a href="{{ url_for('owner.settings') }}"
-         class="sidebar-link {{ 'active' if request.endpoint == 'owner.settings' }}">
+         class="sidebar-link {{ 'active' if request.endpoint == 'owner.settings' }}"
+         onclick="closeSidebar()">
         <span class="sidebar-icon">⚙️</span> Settings
       </a>
     </nav>
@@ -66,9 +75,12 @@
 
   <!-- ── Top Bar ──────────────────────────────────── -->
   <header class="topbar">
+    <button class="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
     <div class="topbar-title">{% block topbar_title %}{% endblock %}</div>
     <div class="topbar-actions">
-      <span style="font-size:.75rem; color:var(--text-muted);">
+      <span style="font-size:.72rem; color:var(--text-muted);">
         🕐 <span id="live-time"></span>
       </span>
     </div>
@@ -86,7 +98,6 @@
           </ul>
         {% endif %}
       {% endwith %}
-
       {% block content %}{% endblock %}
     </div>
   </main>
@@ -94,12 +105,15 @@
 </div>
 
 <script>
+  // Live clock
   function tick() {
     const el = document.getElementById('live-time');
-    if (el) el.textContent = new Date().toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+    if (el) el.textContent = new Date().toLocaleTimeString('en-IN',
+      {hour:'2-digit', minute:'2-digit', second:'2-digit'});
   }
   tick(); setInterval(tick, 1000);
 
+  // Flash auto-dismiss
   setTimeout(() => {
     document.querySelectorAll('.flash').forEach(el => {
       el.style.transition = 'opacity .4s';
@@ -107,6 +121,18 @@
       setTimeout(() => el.remove(), 400);
     });
   }, 3500);
+
+  // Sidebar toggle for mobile
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('overlay').classList.toggle('open');
+  }
+  function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('overlay').classList.remove('open');
+  }
+  // Close on Escape key
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSidebar(); });
 </script>
 {% block scripts %}{% endblock %}
 </body>
