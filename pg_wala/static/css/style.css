@@ -624,3 +624,97 @@ hr.divider { border: none; border-top: 1px solid #f0f4f2; margin: 18px 0; }
   .stats-grid, .stats-grid.four { grid-template-columns: 1fr 1fr; }
   .profile-grid { grid-template-columns: 1fr 1fr; }
 }
+
+/* ════════════════════════════════════════════════════
+   MOBILE SIDEBAR OVERLAY
+════════════════════════════════════════════════════ */
+
+/* Hamburger button — hidden on desktop */
+.hamburger {
+  display: none;
+  width: 36px; height: 36px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: 1px solid var(--topbar-border);
+  cursor: pointer;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  flex-shrink: 0;
+  transition: var(--transition);
+}
+.hamburger:hover { background: var(--surface-2); }
+.hamburger span {
+  display: block;
+  width: 16px; height: 2px;
+  background: var(--text-primary);
+  border-radius: 2px;
+  transition: var(--transition);
+}
+
+/* Overlay backdrop */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  z-index: 199;
+  backdrop-filter: blur(2px);
+}
+.sidebar-overlay.open { display: block; }
+
+@media (max-width: 768px) {
+  /* Reset sidebar-w so main content is full width */
+  :root { --sidebar-w: 0px; }
+
+  /* Sidebar slides in as overlay */
+  .sidebar {
+    width: 240px;
+    transform: translateX(-240px);
+    transition: transform .25s cubic-bezier(.4,0,.2,1);
+    box-shadow: none;
+  }
+  .sidebar.open {
+    transform: translateX(0);
+    box-shadow: 4px 0 24px rgba(0,0,0,.35);
+  }
+
+  /* Topbar: full width, show hamburger */
+  .topbar { left: 0; padding: 0 16px; gap: 10px; }
+  .hamburger { display: flex; }
+
+  /* Main content: no left margin, full width */
+  .main-content { margin-left: 0; }
+  .page { padding: 18px 14px; }
+
+  /* Topbar title smaller on mobile */
+  .topbar-title { font-size: .85rem; }
+
+  /* Stats: 2 columns on mobile */
+  .stats-grid,
+  .stats-grid.four { grid-template-columns: 1fr 1fr; }
+
+  /* Stacked layout for two-col */
+  .two-col,
+  .two-col.reverse { grid-template-columns: 1fr; }
+
+  /* Profile grid */
+  .profile-grid { grid-template-columns: 1fr 1fr; }
+
+  /* Login: single column */
+  .login-left  { display: none; }
+  .login-right { width: 100%; padding: 36px 24px; }
+
+  /* Table: allow horizontal scroll */
+  .table-wrap { -webkit-overflow-scrolling: touch; }
+
+  /* Topbar actions: hide text-heavy stuff */
+  .topbar-actions .btn span { display: none; }
+}
+
+@media (max-width: 400px) {
+  .stats-grid,
+  .stats-grid.four { grid-template-columns: 1fr 1fr; }
+  .stat-value { font-size: 1.6rem; }
+}
