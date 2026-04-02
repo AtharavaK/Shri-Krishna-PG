@@ -1,0 +1,115 @@
+{% extends "owner/base_owner.html" %}
+{% block title %}Guests{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-title"><small>Owner Panel</small>Guest Management</div>
+</div>
+
+{% if checkouts %}
+<div style="margin-bottom:20px;">
+  <div style="font-family:var(--font-display); font-size:.8rem; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--warn); margin-bottom:10px;">
+    📤 Pending Checkout Requests
+  </div>
+  {% for g in checkouts %}
+  <div class="checkout-banner">
+    <span class="icon">📤</span>
+    <p>
+      <strong>{{ g.name }}</strong>
+      has requested checkout. Contact: {{ g.contact_info or '—' }}
+    </p>
+    <form method="POST" action="{{ url_for('owner.checkout_guest', gid=g.guest_id) }}"
+          onsubmit="return confirm('Confirm checkout for {{ g.name }}?')" style="display:inline;">
+      <button class="btn btn-warn btn-sm">Checkout</button>
+    </form>
+    <form method="POST" action="{{ url_for('owner.dismiss_checkout', gid=g.guest_id) }}" style="display:inline; margin-left:6px;">
+      <button class="btn btn-ghost btn-sm">Dismiss</button>
+    </form>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="two-col">
+  <div class="card">
+    <div class="card-header"><span class="card-title">Register New Guest</span></div>
+    <div class="card-body">
+      <form method="POST" action="{{ url_for('owner.guests') }}">
+        <div class="form-group">
+          <label>Full Name *</label>
+          <input type="text" name="name" placeholder="e.g. Ramesh Kumar" required>
+        </div>
+        <div class="form-group">
+          <label>Contact Number</label>
+          <input type="text" name="contact" placeholder="+91 98765 43210">
+        </div>
+        <div class="form-group">
+          <label>ID Proof</label>
+          <input type="text" name="id_proof" placeholder="Aadhaar / PAN / Passport">
+        </div>
+        <div class="form-group">
+          <label>Assign Bed (optional)</label>
+          <select name="bed_id">
+            <option value="">— Unassigned —</option>
+            {% for bed in vacant_beds %}
+            <option value="{{ bed.bed_id }}">Bed #{{ bed.bed_id }} · Room {{ bed.room_no }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full" style="margin-top:6px;">✓ Register Guest</button>
+      </form>
+      <p style="font-size:.75rem; color:var(--text-light); margin-top:12px;">
+        After registering, the guest can log in using their name + contact number.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Active Guests ({{ guests|length }})</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>#</th><th>Name</th><th>Contact</th><th>ID Proof</th><th>Bed</th><th>Joined</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+          {% for g in guests %}
+          <tr>
+            <td style="color:var(--text-muted); font-size:.78rem;">{{ g.guest_id }}</td>
+            <td>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <div class="recent-avatar" style="width:28px;height:28px;font-size:.72rem;">{{ g.name[0].upper() }}</div>
+                <div>
+                  <strong>{{ g.name }}</strong>
+                  {% if g.checkout_requested %}<br><span class="badge badge-checkout">Checkout Req.</span>{% endif %}
+                </div>
+              </div>
+            </td>
+            <td style="color:var(--text-muted); font-size:.85rem;">{{ g.contact_info or '—' }}</td>
+            <td style="font-size:.78rem; color:var(--text-muted);">{{ g.id_proof or '—' }}</td>
+            <td style="font-size:.82rem;">
+              {% if g.bed %}Bed #{{ g.bed_id }} · Rm {{ g.bed.room_no }}{% else %}—{% endif %}
+            </td>
+            <td style="font-size:.78rem; color:var(--text-muted); white-space:nowrap;">
+              {{ g.joined_on.strftime('%d %b %Y') if g.joined_on else '—' }}
+            </td>
+            <td>
+              <div class="td-actions">
+                <a href="{{ url_for('owner.edit_guest', gid=g.guest_id) }}" class="btn btn-ghost btn-sm">Edit</a>
+                <form method="POST" action="{{ url_for('owner.checkout_guest', gid=g.guest_id) }}"
+                      onsubmit="return confirm('Check out {{ g.name }}?')">
+                  <button type="submit" class="btn btn-danger btn-sm">Out</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="7"><div class="empty-state"><span class="emoji">🛎️</span><p>No guests registered.</p></div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

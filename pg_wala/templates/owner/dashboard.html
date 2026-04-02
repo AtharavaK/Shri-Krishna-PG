@@ -1,0 +1,122 @@
+{% extends "owner/base_owner.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-title">
+    <small>Owner Panel</small>
+    Dashboard
+  </div>
+  <span style="font-size:.82rem; color:var(--text-muted);">
+    🕐 <span id="live-time"></span>
+  </span>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card c1">
+    <span class="stat-icon">👤</span>
+    <div class="stat-value">{{ total_guests }}</div>
+    <div class="stat-label">Active Guests</div>
+  </div>
+  <div class="stat-card c2">
+    <span class="stat-icon">🛏️</span>
+    <div class="stat-value">{{ vacant_beds }}</div>
+    <div class="stat-label">Vacant Beds</div>
+  </div>
+  <div class="stat-card c3">
+    <span class="stat-icon">🔒</span>
+    <div class="stat-value">{{ occupied_beds }}</div>
+    <div class="stat-label">Occupied Beds</div>
+  </div>
+  <div class="stat-card c4">
+    <span class="stat-icon">⚠️</span>
+    <div class="stat-value">{{ open_complaints }}</div>
+    <div class="stat-label">Open Complaints</div>
+  </div>
+  <div class="stat-card c5">
+    <span class="stat-icon">📤</span>
+    <div class="stat-value">{{ checkout_requests }}</div>
+    <div class="stat-label">Checkout Requests</div>
+  </div>
+</div>
+
+<div class="two-col">
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Recent Guests</span>
+      <a href="{{ url_for('owner.guests') }}" class="btn btn-ghost btn-sm">View All →</a>
+    </div>
+    <div class="card-body" style="padding:8px 22px;">
+      {% if recent_guests %}
+        <ul class="recent-list">
+          {% for g in recent_guests %}
+          <li class="recent-item">
+            <div class="recent-avatar">{{ g.name[0].upper() }}</div>
+            <div class="recent-info">
+              <strong>{{ g.name }}</strong>
+              <span>{{ g.contact_info or 'No contact' }}
+                {% if g.checkout_requested %}
+                  &nbsp;<span class="badge badge-checkout">Checkout</span>
+                {% endif %}
+              </span>
+            </div>
+            <span class="recent-meta">{{ g.joined_on.strftime('%d %b') if g.joined_on else '—' }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <div class="empty-state"><span class="emoji">🏠</span><p>No guests yet.</p></div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Recent Complaints</span>
+      <a href="{{ url_for('owner.complaints') }}" class="btn btn-ghost btn-sm">View All →</a>
+    </div>
+    <div class="card-body" style="padding:8px 22px;">
+      {% if recent_complaints %}
+        <ul class="recent-list">
+          {% for c in recent_complaints %}
+          <li class="recent-item">
+            <div class="recent-info" style="flex:1;">
+              <strong style="font-size:.85rem;">{{ c.description[:55] }}{% if c.description|length > 55 %}…{% endif %}</strong>
+              <span>{{ c.guest.name if c.guest else 'Anonymous' }} · {{ c.date_logged.strftime('%d %b') if c.date_logged else '—' }}</span>
+            </div>
+            <span class="badge badge-{{ 'new' if c.status=='New' else ('progress' if c.status=='In Progress' else 'resolved') }}">
+              {{ c.status }}
+            </span>
+          </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <div class="empty-state"><span class="emoji">✅</span><p>No complaints!</p></div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="card" style="background:var(--teal-900); border-color:var(--teal-700);">
+  <div class="card-body" style="display:flex; gap:14px; flex-wrap:wrap; align-items:center;">
+    <div style="flex:1; min-width:160px;">
+      <div style="font-family:var(--font-display); font-weight:700; color:var(--saffron); margin-bottom:3px;">Quick Actions</div>
+      <div style="font-size:.82rem; color:var(--teal-200);">Jump to common tasks</div>
+    </div>
+    <a href="{{ url_for('owner.guests') }}"     class="btn btn-primary">+ Register Guest</a>
+    <a href="{{ url_for('owner.complaints') }}" class="btn btn-ghost" style="color:var(--teal-200); border-color:var(--teal-600);">View Complaints</a>
+    <a href="{{ url_for('owner.notices') }}"    class="btn btn-ghost" style="color:var(--teal-200); border-color:var(--teal-600);">Post Notice</a>
+    <a href="{{ url_for('owner.rooms') }}"      class="btn btn-ghost" style="color:var(--teal-200); border-color:var(--teal-600);">Manage Rooms</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function tick() {
+    const el = document.getElementById('live-time');
+    if (el) el.textContent = new Date().toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+  }
+  tick(); setInterval(tick, 1000);
+</script>
+{% endblock %}

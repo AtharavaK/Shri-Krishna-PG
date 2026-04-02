@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login · PG-Wala</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="login-page">
+  <div class="login-left">
+    <div class="login-brand">🏠 PG-Wala</div>
+    <div class="login-tagline">
+      A complete management system for paying guest accommodations — built for owners and residents alike.
+    </div>
+  </div>
+
+  <div class="login-right">
+    <h2>Welcome back</h2>
+    <p>Select your role and sign in below.</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul class="flashes">
+          {% for cat, msg in messages %}
+            <li class="flash {{ cat }}">{{ msg }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    <div class="role-tabs">
+      <button class="role-tab active" onclick="switchTab('owner', this)">🔑 Owner</button>
+      <button class="role-tab"        onclick="switchTab('guest', this)">🛏️ Guest</button>
+    </div>
+
+    <!-- Owner form -->
+    <div class="login-form active" id="form-owner">
+      <form method="POST" action="{{ url_for('auth.login') }}">
+        <input type="hidden" name="role" value="owner">
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" name="username" placeholder="e.g. owner" required autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" name="password" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn btn-primary btn-full" style="margin-top:8px;">Sign in as Owner →</button>
+      </form>
+    </div>
+
+    <!-- Guest form -->
+    <div class="login-form" id="form-guest">
+      <form method="POST" action="{{ url_for('auth.login') }}">
+        <input type="hidden" name="role" value="guest">
+        <div class="form-group">
+          <label>Your Full Name</label>
+          <input type="text" name="name" placeholder="As registered by owner" required>
+        </div>
+        <div class="form-group">
+          <label>ID Proof Number</label>
+          <input type="text" name="id_proof" placeholder="Aadhaar / PAN / Passport number" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full" style="margin-top:8px;">Sign in as Guest →</button>
+      </form>
+      <p style="font-size:.75rem; color:var(--text-light); margin-top:14px; text-align:center;">
+        Use the name and ID proof number your owner registered you with.
+      </p>
+    </div>
+  </div>
+</div>
+
+<script>
+  function switchTab(role, btn) {
+    document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.login-form').forEach(f => f.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('form-' + role).classList.add('active');
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+{% extends "guest/base_guest.html" %}
+{% block title %}My Profile{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-title"><small>My Account</small>Profile</div>
+</div>
+
+<div class="profile-card">
+  <div class="profile-avatar">{{ guest.name[0].upper() }}</div>
+  <div class="profile-name">{{ guest.name }}</div>
+  <div class="profile-sub">Active Resident</div>
+  <div class="profile-grid">
+    <div class="profile-field">
+      <label>Contact</label>
+      <span>{{ guest.contact_info or '—' }}</span>
+    </div>
+    <div class="profile-field">
+      <label>ID Proof</label>
+      <span>{{ guest.id_proof or '—' }}</span>
+    </div>
+    <div class="profile-field">
+      <label>Joined On</label>
+      <span>{{ guest.joined_on.strftime('%d %b %Y') if guest.joined_on else '—' }}</span>
+    </div>
+  </div>
+</div>
+
+<div style="max-width:500px;">
+  <div class="card">
+    <div class="card-header"><span class="card-title">Room & Bed</span></div>
+    <div class="card-body">
+      {% if guest.bed %}
+      <table style="font-size:.9rem;">
+        <tr style="border:none;">
+          <td style="padding:8px 0; color:var(--text-muted); font-size:.78rem; text-transform:uppercase; letter-spacing:.05em; font-weight:500;">Bed ID</td>
+          <td style="padding:8px 16px;"><strong>#{{ guest.bed_id }}</strong></td>
+        </tr>
+        <tr style="border:none;">
+          <td style="padding:8px 0; color:var(--text-muted); font-size:.78rem; text-transform:uppercase; letter-spacing:.05em; font-weight:500;">Room No.</td>
+          <td style="padding:8px 16px;"><strong>{{ guest.bed.room_no }}</strong></td>
+        </tr>
+        <tr style="border:none;">
+          <td style="padding:8px 0; color:var(--text-muted); font-size:.78rem; text-transform:uppercase; letter-spacing:.05em; font-weight:500;">Floor</td>
+          <td style="padding:8px 16px;"><strong>{{ guest.bed.room.floor }}</strong></td>
+        </tr>
+        <tr style="border:none;">
+          <td style="padding:8px 0; color:var(--text-muted); font-size:.78rem; text-transform:uppercase; letter-spacing:.05em; font-weight:500;">Room Type</td>
+          <td style="padding:8px 16px;">
+            <span class="badge {{ 'badge-ac' if guest.bed.room.room_type=='AC' else 'badge-nonac' }}">
+              {{ guest.bed.room.room_type }}
+            </span>
+          </td>
+        </tr>
+      </table>
+      {% else %}
+        <div class="empty-state" style="padding:24px;">
+          <span class="emoji">🛏️</span>
+          <p>No bed assigned yet. Contact your owner.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if not guest.checkout_requested %}
+  <div style="padding:16px; border:1.5px solid #ffcdd2; border-radius:var(--radius-md); background:#fff5f5;">
+    <div style="font-family:var(--font-display); font-weight:700; color:var(--danger); margin-bottom:6px;">Request Checkout</div>
+    <p style="font-size:.85rem; color:var(--text-muted); margin-bottom:12px;">
+      Notify your owner that you wish to check out. They will process it and free your bed.
+    </p>
+    <form method="POST" action="{{ url_for('guest.request_checkout') }}"
+          onsubmit="return confirm('Send checkout request to owner?')">
+      <button type="submit" class="btn btn-danger">📤 Request Checkout</button>
+    </form>
+  </div>
+  {% else %}
+  <div class="checkout-banner">
+    <span class="icon">⏳</span>
+    <p><strong>Checkout Requested</strong>Your owner will process it soon.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

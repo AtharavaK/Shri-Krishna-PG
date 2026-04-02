@@ -1,0 +1,53 @@
+{% extends "owner/base_owner.html" %}
+{% block title %}Notices{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-title"><small>Owner Panel</small>Notice Board</div>
+</div>
+
+<div class="two-col">
+  <div class="card">
+    <div class="card-header"><span class="card-title">Post New Notice</span></div>
+    <div class="card-body">
+      <form method="POST" action="{{ url_for('owner.notices') }}">
+        <div class="form-group">
+          <label>Title *</label>
+          <input type="text" name="title" placeholder="e.g. Water supply off on Sunday" required>
+        </div>
+        <div class="form-group">
+          <label>Message *</label>
+          <textarea name="body" placeholder="Write the full notice here..." required></textarea>
+        </div>
+        <div class="form-group">
+          <label class="check-label">
+            <input type="checkbox" name="is_pinned"> 📌 Pin this notice to the top
+          </label>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full" style="margin-top:6px;">Post Notice</button>
+      </form>
+    </div>
+  </div>
+
+  <div>
+    {% if notices %}
+      {% for n in notices %}
+      <div class="notice-card {{ 'pinned' if n.is_pinned }}">
+        <div class="notice-actions">
+          {% if n.is_pinned %}<span class="badge badge-pinned">📌 Pinned</span>{% endif %}
+          <form method="POST" action="{{ url_for('owner.delete_notice', nid=n.notice_id) }}"
+                onsubmit="return confirm('Delete this notice?')" style="display:inline;">
+            <button class="btn btn-danger btn-sm">✕</button>
+          </form>
+        </div>
+        <div class="notice-title">{{ n.title }}</div>
+        <div class="notice-body">{{ n.body }}</div>
+        <div class="notice-meta">Posted {{ n.posted_on.strftime('%d %b %Y, %I:%M %p') if n.posted_on else '—' }}</div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="card"><div class="card-body"><div class="empty-state"><span class="emoji">📋</span><p>No notices posted yet.</p></div></div></div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

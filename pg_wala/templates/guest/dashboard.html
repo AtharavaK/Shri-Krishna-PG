@@ -1,0 +1,120 @@
+{% extends "guest/base_guest.html" %}
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<!-- Profile summary card -->
+<div class="profile-card">
+  <div class="profile-avatar">{{ guest.name[0].upper() }}</div>
+  <div class="profile-name">{{ guest.name }}</div>
+  <div class="profile-sub">
+    {% if guest.bed %}
+      Room {{ guest.bed.room_no }} · Bed #{{ guest.bed_id }}
+    {% else %}
+      Bed not assigned yet
+    {% endif %}
+  </div>
+  <div class="profile-grid">
+    <div class="profile-field">
+      <label>Contact</label>
+      <span>{{ guest.contact_info or '—' }}</span>
+    </div>
+    <div class="profile-field">
+      <label>ID Proof</label>
+      <span>{{ guest.id_proof or '—' }}</span>
+    </div>
+    <div class="profile-field">
+      <label>Joined</label>
+      <span>{{ guest.joined_on.strftime('%d %b %Y') if guest.joined_on else '—' }}</span>
+    </div>
+  </div>
+</div>
+
+<!-- Checkout request banner -->
+{% if guest.checkout_requested %}
+<div class="checkout-banner">
+  <span class="icon">⏳</span>
+  <p>
+    <strong>Checkout Requested</strong>
+    Your checkout request has been sent. The owner will process it shortly.
+  </p>
+</div>
+{% endif %}
+
+<div class="two-col">
+  <!-- My recent complaints -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">My Complaints</span>
+      <a href="{{ url_for('guest.complaints') }}" class="btn btn-ghost btn-sm">View All →</a>
+    </div>
+    <div class="card-body" style="padding:8px 22px;">
+      {% if my_complaints %}
+        <ul class="recent-list">
+          {% for c in my_complaints %}
+          <li class="recent-item">
+            <div class="recent-info" style="flex:1;">
+              <strong style="font-size:.85rem;">{{ c.description[:50] }}{% if c.description|length > 50 %}…{% endif %}</strong>
+              <span>{{ c.date_logged.strftime('%d %b %Y') if c.date_logged else '—' }}</span>
+            </div>
+            <span class="badge badge-{{ 'new' if c.status=='New' else ('progress' if c.status=='In Progress' else 'resolved') }}">
+              {{ c.status }}
+            </span>
+          </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <div class="empty-state">
+          <span class="emoji">✅</span>
+          <p>No complaints filed yet.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Notices -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">📋 Latest Notices</span>
+      <a href="{{ url_for('guest.notices') }}" class="btn btn-ghost btn-sm">View All →</a>
+    </div>
+    <div class="card-body" style="padding:8px 22px;">
+      {% if notices %}
+        <ul class="recent-list">
+          {% for n in notices %}
+          <li class="recent-item">
+            <div class="recent-info" style="flex:1;">
+              <strong style="font-size:.85rem;">
+                {% if n.is_pinned %}📌 {% endif %}{{ n.title }}
+              </strong>
+              <span>{{ n.posted_on.strftime('%d %b') if n.posted_on else '—' }}</span>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <div class="empty-state"><span class="emoji">📋</span><p>No notices from owner.</p></div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Quick actions -->
+<div class="card" style="background:var(--ivory-dark); border-color:var(--ivory-dark);">
+  <div class="card-body" style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+    <div style="flex:1; min-width:140px;">
+      <div style="font-family:var(--font-display); font-weight:700; color:var(--teal-800); margin-bottom:2px;">Quick Actions</div>
+      <div style="font-size:.82rem; color:var(--text-muted);">Common things you might need</div>
+    </div>
+    <a href="{{ url_for('guest.complaints') }}" class="btn btn-primary">+ File Complaint</a>
+    <a href="{{ url_for('guest.notices') }}"    class="btn btn-ghost">View Notices</a>
+    {% if not guest.checkout_requested %}
+    <form method="POST" action="{{ url_for('guest.request_checkout') }}"
+          onsubmit="return confirm('Request checkout? The owner will be notified.')">
+      <button type="submit" class="btn btn-ghost" style="color:var(--danger); border-color:#ffcdd2;">
+        📤 Request Checkout
+      </button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

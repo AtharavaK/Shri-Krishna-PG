@@ -1,0 +1,77 @@
+{% extends "guest/base_guest.html" %}
+{% block title %}My Complaints{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-title"><small>My Account</small>Complaints</div>
+</div>
+
+<div class="two-col">
+  <div class="card">
+    <div class="card-header"><span class="card-title">File a Complaint</span></div>
+    <div class="card-body">
+      <form method="POST">
+        <div class="form-group">
+          <label>Describe your issue *</label>
+          <textarea name="description"
+            placeholder="e.g. WiFi not working in my room, water leakage in bathroom..."
+            required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full">Submit Complaint</button>
+      </form>
+      <div style="margin-top:16px; padding:12px; background:var(--ivory); border-radius:var(--radius-sm); font-size:.78rem; color:var(--text-muted); line-height:1.7;">
+        🔴 <strong>New</strong> — submitted, pending review<br>
+        🔵 <strong>In Progress</strong> — owner is looking into it<br>
+        🟢 <strong>Resolved</strong> — issue has been closed
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">My Complaints ({{ complaints|length }})</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Description</th>
+            <th>Date Filed</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in complaints %}
+          <tr>
+            <td style="color:var(--text-muted); font-size:.78rem;">{{ c.complaint_id }}</td>
+            <td>
+              <span title="{{ c.description }}">
+                {{ c.description[:65] }}{% if c.description|length > 65 %}…{% endif %}
+              </span>
+            </td>
+            <td style="font-size:.8rem; color:var(--text-muted); white-space:nowrap;">
+              {{ c.date_logged.strftime('%d %b %Y') if c.date_logged else '—' }}
+            </td>
+            <td>
+              <span class="badge badge-{{ 'new' if c.status=='New' else ('progress' if c.status=='In Progress' else 'resolved') }}">
+                {{ c.status }}
+              </span>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="4">
+              <div class="empty-state">
+                <span class="emoji">✅</span>
+                <p>No complaints filed yet.</p>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

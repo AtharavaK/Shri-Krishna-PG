@@ -1,0 +1,35 @@
+{% extends "owner/base_owner.html" %}
+{% block title %}Edit Guest{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-title"><small>Guests / Edit</small>Edit Guest</div>
+  <a href="{{ url_for('owner.guests') }}" class="btn btn-ghost">← Back</a>
+</div>
+
+<div style="max-width:460px;">
+  <div class="card">
+    <div class="card-header"><span class="card-title">Update Guest #{{ guest.guest_id }}</span></div>
+    <div class="card-body">
+      <form method="POST">
+        <div class="form-group">
+          <label>Full Name *</label>
+          <input type="text" name="name" value="{{ guest.name }}" required>
+        </div>
+        <div class="form-group">
+          <label>Contact Number</label>
+          <input type="text" name="contact" value="{{ guest.contact_info or '' }}">
+        </div>
+        <div class="form-group">
+          <label>ID Proof</label>
+          <input type="text" name="id_proof" value="{{ guest.id_proof or '' }}">
+        </div>
+        <div style="display:flex; gap:10px; margin-top:6px;">
+          <button type="submit" class="btn btn-primary" style="flex:1;">Save Changes</button>
+          <a href="{{ url_for('owner.guests') }}" class="btn btn-ghost">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

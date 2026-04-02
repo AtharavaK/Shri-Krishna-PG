@@ -1,0 +1,29 @@
+{% extends "guest/base_guest.html" %}
+{% block title %}Notices{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-title"><small>From Owner</small>Notice Board</div>
+</div>
+
+{% if notices %}
+  {% for n in notices %}
+  <div class="notice-card {{ 'pinned' if n.is_pinned }}">
+    <div class="notice-title">{% if n.is_pinned %}📌 {% endif %}{{ n.title }}</div>
+    <div class="notice-body">{{ n.body }}</div>
+    <div class="notice-meta">
+      Posted {{ n.posted_on.strftime('%d %b %Y, %I:%M %p') if n.posted_on else '—' }}
+    </div>
+  </div>
+  {% endfor %}
+{% else %}
+  <div class="card">
+    <div class="card-body">
+      <div class="empty-state">
+        <span class="emoji">📋</span>
+        <p>No notices from owner yet. Check back later.</p>
+      </div>
+    </div>
+  </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}My PG{% endblock %} · PG-Wala</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- ── Sidebar ─────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-text">🏠 PG-Wala</div>
+      <span class="sidebar-role-badge guest">Resident</span>
+    </div>
+
+    <div class="sidebar-user">
+      <div class="sidebar-avatar">{{ current_user.name[0].upper() }}</div>
+      <div class="sidebar-user-info">
+        <strong>{{ current_user.name }}</strong>
+        <span>
+          {% if current_user.bed %}Room {{ current_user.bed.room_no }}{% else %}No bed{% endif %}
+        </span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="sidebar-label">My Space</div>
+
+      <a href="{{ url_for('guest.dashboard') }}"
+         class="sidebar-link {{ 'active' if request.endpoint == 'guest.dashboard' }}">
+        <span class="sidebar-icon">🏠</span> Home
+      </a>
+      <a href="{{ url_for('guest.profile') }}"
+         class="sidebar-link {{ 'active' if request.endpoint == 'guest.profile' }}">
+        <span class="sidebar-icon">👤</span> My Profile
+      </a>
+      <a href="{{ url_for('guest.complaints') }}"
+         class="sidebar-link {{ 'active' if request.endpoint == 'guest.complaints' }}">
+        <span class="sidebar-icon">⚠️</span> Complaints
+      </a>
+      <a href="{{ url_for('guest.notices') }}"
+         class="sidebar-link {{ 'active' if request.endpoint == 'guest.notices' }}">
+        <span class="sidebar-icon">📋</span> Notices
+      </a>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <a href="{{ url_for('auth.logout') }}" class="sidebar-link" style="color:#e57373;">
+        <span class="sidebar-icon">🚪</span> Logout
+      </a>
+    </div>
+  </aside>
+
+  <!-- ── Top Bar ──────────────────────────────────── -->
+  <header class="topbar">
+    <div class="topbar-title">{% block topbar_title %}{% endblock %}</div>
+    <div class="topbar-actions">
+      {% if not current_user.checkout_requested %}
+      <form method="POST" action="{{ url_for('guest.request_checkout') }}"
+            onsubmit="return confirm('Send checkout request to owner?')">
+        <button type="submit" class="btn btn-ghost btn-sm" style="color:var(--danger); border-color:var(--danger-border); font-size:.68rem;">
+          📤 Request Checkout
+        </button>
+      </form>
+      {% else %}
+      <span class="badge badge-checkout">⏳ Checkout Pending</span>
+      {% endif %}
+    </div>
+  </header>
+
+  <!-- ── Main Content ─────────────────────────────── -->
+  <main class="main-content">
+    <div class="page">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <ul class="flashes">
+            {% for cat, msg in messages %}
+              <li class="flash {{ cat }}">{{ msg }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      {% endwith %}
+
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+
+</div>
+
+<script>
+  setTimeout(() => {
+    document.querySelectorAll('.flash').forEach(el => {
+      el.style.transition = 'opacity .4s';
+      el.style.opacity = 0;
+      setTimeout(() => el.remove(), 400);
+    });
+  }, 3500);
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

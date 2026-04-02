@@ -1,0 +1,93 @@
+{% extends "owner/base_owner.html" %}
+{% block title %}Complaints{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-title"><small>Owner Panel</small>Complaint Tracker</div>
+</div>
+
+<div class="two-col reverse">
+  <div>
+    <div class="filter-bar">
+      <a href="?status=all"         class="filter-btn {{ 'active' if status_filter=='all' }}">All</a>
+      <a href="?status=New"         class="filter-btn {{ 'active' if status_filter=='New' }}">🔴 New</a>
+      <a href="?status=In+Progress" class="filter-btn {{ 'active' if status_filter=='In Progress' }}">🔵 In Progress</a>
+      <a href="?status=Resolved"    class="filter-btn {{ 'active' if status_filter=='Resolved' }}">🟢 Resolved</a>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>#</th><th>Description</th><th>Guest</th><th>Date</th><th>Status</th><th>Actions</th></tr>
+          </thead>
+          <tbody>
+            {% for c in complaints %}
+            <tr>
+              <td style="color:var(--text-muted); font-size:.78rem;">{{ c.complaint_id }}</td>
+              <td style="max-width:240px;">
+                <span title="{{ c.description }}">{{ c.description[:60] }}{% if c.description|length > 60 %}…{% endif %}</span>
+              </td>
+              <td style="font-size:.82rem; color:var(--text-muted);">{{ c.guest.name if c.guest else '—' }}</td>
+              <td style="font-size:.78rem; color:var(--text-muted); white-space:nowrap;">
+                {{ c.date_logged.strftime('%d %b %Y') if c.date_logged else '—' }}
+              </td>
+              <td>
+                <span class="badge badge-{{ 'new' if c.status=='New' else ('progress' if c.status=='In Progress' else 'resolved') }}">
+                  {{ c.status }}
+                </span>
+              </td>
+              <td>
+                <div class="td-actions">
+                  <form method="POST" action="{{ url_for('owner.update_complaint', cid=c.complaint_id) }}"
+                        style="display:flex; gap:4px;">
+                    <select name="status" style="padding:4px 7px; font-size:.75rem; width:auto;">
+                      <option value="New"         {{ 'selected' if c.status=='New' }}>New</option>
+                      <option value="In Progress" {{ 'selected' if c.status=='In Progress' }}>In Progress</option>
+                      <option value="Resolved"    {{ 'selected' if c.status=='Resolved' }}>Resolved</option>
+                    </select>
+                    <button class="btn btn-ghost btn-sm">✓</button>
+                  </form>
+                  <form method="POST" action="{{ url_for('owner.delete_complaint', cid=c.complaint_id) }}"
+                        onsubmit="return confirm('Delete this complaint?')">
+                    <button class="btn btn-danger btn-sm">✕</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6"><div class="empty-state"><span class="emoji">🎉</span><p>No complaints here.</p></div></td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><span class="card-title">Log a Complaint</span></div>
+    <div class="card-body">
+      <form method="POST" action="{{ url_for('owner.complaints') }}">
+        <div class="form-group">
+          <label>Guest (optional)</label>
+          <select name="guest_id">
+            <option value="">— Anonymous —</option>
+            {% for g in active_guests %}
+            <option value="{{ g.guest_id }}">{{ g.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Description *</label>
+          <textarea name="description" placeholder="Describe the issue..." required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full">Submit</button>
+      </form>
+      <div style="margin-top:16px; padding:12px; background:var(--ivory); border-radius:var(--radius-sm); font-size:.78rem; color:var(--text-muted); line-height:1.7;">
+        🔴 <strong>New</strong> — pending review<br>
+        🔵 <strong>In Progress</strong> — investigating<br>
+        🟢 <strong>Resolved</strong> — closed
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

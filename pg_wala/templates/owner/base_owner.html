@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Owner{% endblock %} · PG-Wala</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- ── Sidebar ─────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-text">🏠 PG-Wala</div>
+      <span class="sidebar-role-badge owner">Owner Panel</span>
+    </div>
+
+    <div class="sidebar-user">
+      <div class="sidebar-avatar">{{ current_user.username[0].upper() }}</div>
+      <div class="sidebar-user-info">
+        <strong>{{ current_user.username }}</strong>
+        <span>Administrator</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="sidebar-label">Main</div>
+
+      <a href="{{ url_for('owner.dashboard') }}"
+         class="sidebar-link {{ 'active' if request.endpoint == 'owner.dashboard' }}">
+        <span class="sidebar-icon">📊</span> Dashboard
+      </a>
+      <a href="{{ url_for('owner.guests') }}"
+         class="sidebar-link {{ 'active' if request.endpoint in ['owner.guests','owner.edit_guest'] }}">
+        <span class="sidebar-icon">👤</span> Guests
+      </a>
+      <a href="{{ url_for('owner.rooms') }}"
+         class="sidebar-link {{ 'active' if request.endpoint == 'owner.rooms' }}">
+        <span class="sidebar-icon">🛏️</span> Rooms
+      </a>
+      <a href="{{ url_for('owner.complaints') }}"
+         class="sidebar-link {{ 'active' if request.endpoint == 'owner.complaints' }}">
+        <span class="sidebar-icon">⚠️</span> Complaints
+      </a>
+      <a href="{{ url_for('owner.notices') }}"
+         class="sidebar-link {{ 'active' if request.endpoint == 'owner.notices' }}">
+        <span class="sidebar-icon">📋</span> Notices
+      </a>
+
+      <div class="sidebar-label" style="margin-top:8px;">Account</div>
+      <a href="{{ url_for('owner.settings') }}"
+         class="sidebar-link {{ 'active' if request.endpoint == 'owner.settings' }}">
+        <span class="sidebar-icon">⚙️</span> Settings
+      </a>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <a href="{{ url_for('auth.logout') }}" class="sidebar-link" style="color:#e57373;">
+        <span class="sidebar-icon">🚪</span> Logout
+      </a>
+    </div>
+  </aside>
+
+  <!-- ── Top Bar ──────────────────────────────────── -->
+  <header class="topbar">
+    <div class="topbar-title">{% block topbar_title %}{% endblock %}</div>
+    <div class="topbar-actions">
+      <span style="font-size:.75rem; color:var(--text-muted);">
+        🕐 <span id="live-time"></span>
+      </span>
+    </div>
+  </header>
+
+  <!-- ── Main Content ─────────────────────────────── -->
+  <main class="main-content">
+    <div class="page">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <ul class="flashes">
+            {% for cat, msg in messages %}
+              <li class="flash {{ cat }}">{{ msg }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      {% endwith %}
+
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+
+</div>
+
+<script>
+  function tick() {
+    const el = document.getElementById('live-time');
+    if (el) el.textContent = new Date().toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+  }
+  tick(); setInterval(tick, 1000);
+
+  setTimeout(() => {
+    document.querySelectorAll('.flash').forEach(el => {
+      el.style.transition = 'opacity .4s';
+      el.style.opacity = 0;
+      setTimeout(() => el.remove(), 400);
+    });
+  }, 3500);
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>
