@@ -9,10 +9,14 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
+
+<!-- Overlay backdrop for mobile -->
+<div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
+
 <div class="app-shell">
 
-  <!-- ── Sidebar ─────────────────────────────────── -->
-  <aside class="sidebar">
+  <!-- ── Sidebar ──────────────────────────────────── -->
+  <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo">
       <div class="sidebar-logo-text">🏠 PG-Wala</div>
       <span class="sidebar-role-badge guest">Resident</span>
@@ -22,29 +26,30 @@
       <div class="sidebar-avatar">{{ current_user.name[0].upper() }}</div>
       <div class="sidebar-user-info">
         <strong>{{ current_user.name }}</strong>
-        <span>
-          {% if current_user.bed %}Room {{ current_user.bed.room_no }}{% else %}No bed{% endif %}
-        </span>
+        <span>{% if current_user.bed %}Room {{ current_user.bed.room_no }}{% else %}No bed assigned{% endif %}</span>
       </div>
     </div>
 
     <nav class="sidebar-nav">
       <div class="sidebar-label">My Space</div>
-
       <a href="{{ url_for('guest.dashboard') }}"
-         class="sidebar-link {{ 'active' if request.endpoint == 'guest.dashboard' }}">
+         class="sidebar-link {{ 'active' if request.endpoint == 'guest.dashboard' }}"
+         onclick="closeSidebar()">
         <span class="sidebar-icon">🏠</span> Home
       </a>
       <a href="{{ url_for('guest.profile') }}"
-         class="sidebar-link {{ 'active' if request.endpoint == 'guest.profile' }}">
+         class="sidebar-link {{ 'active' if request.endpoint == 'guest.profile' }}"
+         onclick="closeSidebar()">
         <span class="sidebar-icon">👤</span> My Profile
       </a>
       <a href="{{ url_for('guest.complaints') }}"
-         class="sidebar-link {{ 'active' if request.endpoint == 'guest.complaints' }}">
+         class="sidebar-link {{ 'active' if request.endpoint == 'guest.complaints' }}"
+         onclick="closeSidebar()">
         <span class="sidebar-icon">⚠️</span> Complaints
       </a>
       <a href="{{ url_for('guest.notices') }}"
-         class="sidebar-link {{ 'active' if request.endpoint == 'guest.notices' }}">
+         class="sidebar-link {{ 'active' if request.endpoint == 'guest.notices' }}"
+         onclick="closeSidebar()">
         <span class="sidebar-icon">📋</span> Notices
       </a>
     </nav>
@@ -58,13 +63,17 @@
 
   <!-- ── Top Bar ──────────────────────────────────── -->
   <header class="topbar">
+    <button class="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
     <div class="topbar-title">{% block topbar_title %}{% endblock %}</div>
     <div class="topbar-actions">
       {% if not current_user.checkout_requested %}
       <form method="POST" action="{{ url_for('guest.request_checkout') }}"
             onsubmit="return confirm('Send checkout request to owner?')">
-        <button type="submit" class="btn btn-ghost btn-sm" style="color:var(--danger); border-color:var(--danger-border); font-size:.68rem;">
-          📤 Request Checkout
+        <button type="submit" class="btn btn-ghost btn-sm"
+                style="color:var(--danger); border-color:var(--danger-border); font-size:.68rem;">
+          📤 Checkout
         </button>
       </form>
       {% else %}
@@ -85,7 +94,6 @@
           </ul>
         {% endif %}
       {% endwith %}
-
       {% block content %}{% endblock %}
     </div>
   </main>
@@ -93,6 +101,7 @@
 </div>
 
 <script>
+  // Flash auto-dismiss
   setTimeout(() => {
     document.querySelectorAll('.flash').forEach(el => {
       el.style.transition = 'opacity .4s';
@@ -100,6 +109,17 @@
       setTimeout(() => el.remove(), 400);
     });
   }, 3500);
+
+  // Sidebar toggle for mobile
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('overlay').classList.toggle('open');
+  }
+  function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('overlay').classList.remove('open');
+  }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSidebar(); });
 </script>
 {% block scripts %}{% endblock %}
 </body>
