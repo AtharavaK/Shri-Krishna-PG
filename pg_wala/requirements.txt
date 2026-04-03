@@ -1,5 +1,6 @@
 flask
-gunicorn
-flask-login
 flask-sqlalchemy
-flask-bcrypt
+flask-login
+werkzeug
+psycopg2-binary
+gunicorn
