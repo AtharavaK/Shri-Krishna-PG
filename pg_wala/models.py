@@ -23,7 +23,7 @@ class Owner(UserMixin, db.Model):
     def get_id(self):
         return f'owner-{self.id}'
 
-# ── Room & Bed ─────────────────────────────────────────────────────────────────
+# ── Room & Bed ──────────────────────────────────────────────────────────
 class Room(db.Model):
     __tablename__ = 'rooms'
     room_no   = db.Column(db.Integer, primary_key=True)
@@ -39,8 +39,8 @@ class Bed(db.Model):
     is_occupied = db.Column(db.Boolean, default=False)
     guest       = db.relationship('Guest', backref='bed', uselist=False)
 
-# ── Guest ──────────────────────────────────────────────────────────────────────
-class Guest(db.Model):
+# ── Guest ────────────────────────────────────────────────────────────
+class Guest(UserMixin, db.Model):
     __tablename__ = 'guests'
     guest_id     = db.Column(db.Integer, primary_key=True)
     name         = db.Column(db.String(100), nullable=False)
@@ -56,14 +56,7 @@ class Guest(db.Model):
     def get_id(self):
         return f'guest-{self.guest_id}'
 
-    @property
-    def is_authenticated(self): return True
-    @property
-    def is_active_user(self):   return self.is_active
-    @property
-    def is_anonymous(self):     return False
-
-# ── Complaint ──────────────────────────────────────────────────────────────────
+# ── Complaint ───────────────────────────────────────────────────────────
 class Complaint(db.Model):
     __tablename__ = 'complaints'
     complaint_id = db.Column(db.Integer, primary_key=True)
