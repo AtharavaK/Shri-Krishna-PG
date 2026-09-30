@@ -4,4 +4,3 @@ flask-login
 werkzeug
 psycopg2-binary
 gunicorn
-psycopg[binary]
