@@ -35,7 +35,7 @@ def login():
             guest = Guest.query.filter(
                 db.func.lower(Guest.name) == name,
                 Guest.id_proof == id_proof,
-                Guest.is_active == True
+                Guest.is_active.is_(True)
             ).first()
             if guest:
                 login_user(guest)
