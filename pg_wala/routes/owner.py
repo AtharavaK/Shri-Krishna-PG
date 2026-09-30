@@ -15,7 +15,7 @@ def owner_required(f):
         return f(*args, **kwargs)
     return decorated
 
-# ── Dashboard ──────────────────────────────────────────────────────────────────
+# ── Dashboard ───────────────────────────────────────────────────────────
 @owner_bp.route('/')
 @owner_required
 def dashboard():
@@ -32,24 +32,42 @@ def dashboard():
         open_complaints=open_complaints, checkout_requests=checkout_requests,
         recent_complaints=recent_complaints, recent_guests=recent_guests)
 
-# ── Guests ─────────────────────────────────────────────────────────────────────
+# ── Guests ────────────────────────────────────────────────────────────
 @owner_bp.route('/guests', methods=['GET', 'POST'])
 @owner_required
 def guests():
     if request.method == 'POST':
+        # Validate required fields
+        name = request.form.get('name', '').strip()
+        contact = request.form.get('contact', '').strip()
+        id_proof = request.form.get('id_proof', '').strip()
         bed_id = request.form.get('bed_id') or None
-        g = Guest(
-            name=request.form['name'],
-            contact_info=request.form['contact'],
-            id_proof=request.form['id_proof'],
-            bed_id=int(bed_id) if bed_id else None
-        )
-        db.session.add(g)
-        if bed_id:
-            bed = Bed.query.get(int(bed_id))
-            if bed: bed.is_occupied = True
-        db.session.commit()
-        flash(f'Guest "{g.name}" registered. They can now log in with their name + contact.', 'success')
+
+        if not name or not contact or not id_proof:
+            flash('All fields (name, contact, ID proof) are required.', 'error')
+            all_guests = Guest.query.filter_by(is_active=True).order_by(Guest.joined_on.desc()).all()
+            vacant_beds = Bed.query.filter_by(is_occupied=False).all()
+            checkouts = Guest.query.filter_by(is_active=True, checkout_requested=True).all()
+            return render_template('owner/guests.html',
+                guests=all_guests, vacant_beds=vacant_beds, checkouts=checkouts)
+
+        try:
+            g = Guest(
+                name=name,
+                contact_info=contact,
+                id_proof=id_proof,
+                bed_id=int(bed_id) if bed_id else None
+            )
+            db.session.add(g)
+            if bed_id:
+                bed = Bed.query.get(int(bed_id))
+                if bed:
+                    bed.is_occupied = True
+            db.session.commit()
+            flash(f'Guest "{g.name}" registered successfully.', 'success')
+        except (ValueError, Exception) as e:
+            db.session.rollback()
+            flash(f'Error registering guest: {str(e)}', 'error')
         return redirect(url_for('owner.guests'))
 
     all_guests   = Guest.query.filter_by(is_active=True).order_by(Guest.joined_on.desc()).all()
@@ -63,11 +81,25 @@ def guests():
 def edit_guest(gid):
     g = Guest.query.get_or_404(gid)
     if request.method == 'POST':
-        g.name         = request.form['name']
-        g.contact_info = request.form['contact']
-        g.id_proof     = request.form['id_proof']
-        db.session.commit()
-        flash('Guest updated.', 'success')
+        # Validate required fields
+        name = request.form.get('name', '').strip()
+        contact = request.form.get('contact', '').strip()
+        id_proof = request.form.get('id_proof', '').strip()
+
+        if not name or not contact or not id_proof:
+            flash('All fields are required.', 'error')
+            return render_template('owner/edit_guest.html', guest=g)
+
+        try:
+            g.name         = name
+            g.contact_info = contact
+            g.id_proof     = id_proof
+            db.session.commit()
+            flash('Guest updated successfully.', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error updating guest: {str(e)}', 'error')
+            return render_template('owner/edit_guest.html', guest=g)
         return redirect(url_for('owner.guests'))
     return render_template('owner/edit_guest.html', guest=g)
 
@@ -77,7 +109,8 @@ def checkout_guest(gid):
     g = Guest.query.get_or_404(gid)
     if g.bed_id:
         bed = Bed.query.get(g.bed_id)
-        if bed: bed.is_occupied = False
+        if bed:
+            bed.is_occupied = False
     g.is_active = False
     g.checkout_requested = False
     db.session.commit()
@@ -93,96 +126,170 @@ def dismiss_checkout(gid):
     flash('Checkout request dismissed.', 'info')
     return redirect(url_for('owner.guests'))
 
-# ── Complaints ─────────────────────────────────────────────────────────────────
+# ── Complaints ──────────────────────────────────────────────────────────
 @owner_bp.route('/complaints', methods=['GET', 'POST'])
 @owner_required
 def complaints():
     if request.method == 'POST':
-        c = Complaint(
-            description=request.form['description'],
-            guest_id=request.form.get('guest_id') or None
-        )
-        db.session.add(c); db.session.commit()
-        flash('Complaint filed.', 'success')
+        description = request.form.get('description', '').strip()
+        guest_id = request.form.get('guest_id') or None
+
+        if not description:
+            flash('Description is required.', 'error')
+            sf = request.args.get('status', 'all')
+            q = Complaint.query
+            if sf != 'all':
+                q = q.filter_by(status=sf)
+            complaints_list = q.order_by(Complaint.date_logged.desc()).all()
+            active_guests = Guest.query.filter_by(is_active=True).all()
+            return render_template('owner/complaints.html',
+                complaints=complaints_list, status_filter=sf, active_guests=active_guests)
+
+        try:
+            c = Complaint(
+                description=description,
+                guest_id=int(guest_id) if guest_id else None
+            )
+            db.session.add(c)
+            db.session.commit()
+            flash('Complaint filed successfully.', 'success')
+        except (ValueError, Exception) as e:
+            db.session.rollback()
+            flash(f'Error filing complaint: {str(e)}', 'error')
         return redirect(url_for('owner.complaints'))
 
     sf = request.args.get('status', 'all')
     q  = Complaint.query
-    if sf != 'all': q = q.filter_by(status=sf)
-    complaints    = q.order_by(Complaint.date_logged.desc()).all()
+    if sf != 'all':
+        q = q.filter_by(status=sf)
+    complaints_list    = q.order_by(Complaint.date_logged.desc()).all()
     active_guests = Guest.query.filter_by(is_active=True).all()
     return render_template('owner/complaints.html',
-        complaints=complaints, status_filter=sf, active_guests=active_guests)
+        complaints=complaints_list, status_filter=sf, active_guests=active_guests)
 
 @owner_bp.route('/complaints/update/<int:cid>', methods=['POST'])
 @owner_required
 def update_complaint(cid):
     c = Complaint.query.get_or_404(cid)
-    c.status = request.form['status']
-    db.session.commit()
-    flash('Status updated.', 'success')
+    status = request.form.get('status', '').strip()
+    
+    if not status:
+        flash('Status is required.', 'error')
+        return redirect(url_for('owner.complaints'))
+    
+    try:
+        c.status = status
+        db.session.commit()
+        flash('Status updated successfully.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error updating status: {str(e)}', 'error')
     return redirect(url_for('owner.complaints'))
 
 @owner_bp.route('/complaints/delete/<int:cid>', methods=['POST'])
 @owner_required
 def delete_complaint(cid):
     c = Complaint.query.get_or_404(cid)
-    db.session.delete(c); db.session.commit()
-    flash('Complaint removed.', 'info')
+    try:
+        db.session.delete(c)
+        db.session.commit()
+        flash('Complaint removed.', 'info')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting complaint: {str(e)}', 'error')
     return redirect(url_for('owner.complaints'))
 
-# ── Rooms ──────────────────────────────────────────────────────────────────────
+# ── Rooms ────────────────────────────────────────────────────────────
 @owner_bp.route('/rooms', methods=['GET', 'POST'])
 @owner_required
 def rooms():
     if request.method == 'POST':
-        room = Room(
-            room_no=int(request.form['room_no']),
-            room_type=request.form['room_type'],
-            capacity=int(request.form['capacity']),
-            floor=int(request.form['floor'])
-        )
-        db.session.add(room); db.session.flush()
-        for _ in range(room.capacity):
-            db.session.add(Bed(room_no=room.room_no))
-        db.session.commit()
-        flash(f'Room {room.room_no} added.', 'success')
+        # Validate required fields
+        room_no = request.form.get('room_no', '').strip()
+        room_type = request.form.get('room_type', '').strip()
+        capacity = request.form.get('capacity', '').strip()
+        floor = request.form.get('floor', '').strip()
+
+        if not room_no or not room_type or not capacity or not floor is None:
+            flash('All fields are required.', 'error')
+            rooms_list = Room.query.order_by(Room.floor, Room.room_no).all()
+            return render_template('owner/rooms.html', rooms=rooms_list)
+
+        try:
+            room = Room(
+                room_no=int(room_no),
+                room_type=room_type,
+                capacity=int(capacity),
+                floor=int(floor)
+            )
+            db.session.add(room)
+            db.session.flush()
+            for _ in range(room.capacity):
+                db.session.add(Bed(room_no=room.room_no))
+            db.session.commit()
+            flash(f'Room {room.room_no} added successfully.', 'success')
+        except (ValueError, Exception) as e:
+            db.session.rollback()
+            flash(f'Error adding room: {str(e)}', 'error')
         return redirect(url_for('owner.rooms'))
 
-    rooms = Room.query.order_by(Room.floor, Room.room_no).all()
-    return render_template('owner/rooms.html', rooms=rooms)
+    rooms_list = Room.query.order_by(Room.floor, Room.room_no).all()
+    return render_template('owner/rooms.html', rooms=rooms_list)
 
 @owner_bp.route('/rooms/delete/<int:rno>', methods=['POST'])
 @owner_required
 def delete_room(rno):
     r = Room.query.get_or_404(rno)
-    db.session.delete(r); db.session.commit()
-    flash('Room deleted.', 'info')
+    try:
+        db.session.delete(r)
+        db.session.commit()
+        flash('Room deleted.', 'info')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting room: {str(e)}', 'error')
     return redirect(url_for('owner.rooms'))
 
-# ── Notices ────────────────────────────────────────────────────────────────────
+# ── Notices ──────────────────────────────────────────────────────────
 @owner_bp.route('/notices', methods=['GET', 'POST'])
 @owner_required
 def notices():
     if request.method == 'POST':
-        n = Notice(
-            title=request.form['title'],
-            body=request.form['body'],
-            is_pinned='is_pinned' in request.form
-        )
-        db.session.add(n); db.session.commit()
-        flash('Notice posted.', 'success')
+        title = request.form.get('title', '').strip()
+        body = request.form.get('body', '').strip()
+
+        if not title or not body:
+            flash('Title and body are required.', 'error')
+            notices_list = Notice.query.order_by(Notice.is_pinned.desc(), Notice.posted_on.desc()).all()
+            return render_template('owner/notices.html', notices=notices_list)
+
+        try:
+            n = Notice(
+                title=title,
+                body=body,
+                is_pinned='is_pinned' in request.form
+            )
+            db.session.add(n)
+            db.session.commit()
+            flash('Notice posted successfully.', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error posting notice: {str(e)}', 'error')
         return redirect(url_for('owner.notices'))
 
-    notices = Notice.query.order_by(Notice.is_pinned.desc(), Notice.posted_on.desc()).all()
-    return render_template('owner/notices.html', notices=notices)
+    notices_list = Notice.query.order_by(Notice.is_pinned.desc(), Notice.posted_on.desc()).all()
+    return render_template('owner/notices.html', notices=notices_list)
 
 @owner_bp.route('/notices/delete/<int:nid>', methods=['POST'])
 @owner_required
 def delete_notice(nid):
     n = Notice.query.get_or_404(nid)
-    db.session.delete(n); db.session.commit()
-    flash('Notice deleted.', 'info')
+    try:
+        db.session.delete(n)
+        db.session.commit()
+        flash('Notice deleted.', 'info')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting notice: {str(e)}', 'error')
     return redirect(url_for('owner.notices'))
 
 # ── Settings (change username/password) ───────────────────────────────────────
@@ -216,8 +323,12 @@ def settings():
                 return redirect(url_for('owner.settings'))
             current_user.set_password(new_password)
 
-        db.session.commit()
-        flash('Credentials updated successfully!', 'success')
+        try:
+            db.session.commit()
+            flash('Credentials updated successfully!', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error updating credentials: {str(e)}', 'error')
         return redirect(url_for('owner.settings'))
 
     return render_template('owner/settings.html')
